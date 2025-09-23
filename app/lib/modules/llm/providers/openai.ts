@@ -13,6 +13,15 @@ export default class OpenAIProvider extends BaseProvider {
   };
 
   staticModels: ModelInfo[] = [
+    // GPT-5: Advanced reasoning model (requires temperature=1)
+    {
+      name: 'gpt-5',
+      label: 'GPT-5 (Reasoning)',
+      provider: 'OpenAI',
+      maxTokenAllowed: 32768,
+      maxCompletionTokens: 4096,
+    },
+
     /*
      * Essential fallback models - only the most stable/reliable ones
      * GPT-4o: 128k context, 4k standard output (64k with long output mode)
@@ -74,6 +83,13 @@ export default class OpenAIProvider extends BaseProvider {
     });
 
     const res = (await response.json()) as any;
+
+    // Check if the API returned valid data
+    if (!res.data || !Array.isArray(res.data)) {
+      console.error('OpenAI API response missing data:', res);
+      return []; // Return empty array if no data
+    }
+
     const staticModelIds = this.staticModels.map((m) => m.name);
 
     const data = res.data.filter(
@@ -90,6 +106,8 @@ export default class OpenAIProvider extends BaseProvider {
       // OpenAI provides context_length in their API response
       if (m.context_length) {
         contextWindow = m.context_length;
+      } else if (m.id?.includes('gpt-5')) {
+        contextWindow = 32768; // GPT-5 has 32k context
       } else if (m.id?.includes('gpt-4o')) {
         contextWindow = 128000; // GPT-4o has 128k context
       } else if (m.id?.includes('gpt-4-turbo') || m.id?.includes('gpt-4-1106')) {
@@ -103,7 +121,9 @@ export default class OpenAIProvider extends BaseProvider {
       // Determine completion token limits based on model type (accurate 2025 limits)
       let maxCompletionTokens = 4096; // default for most models
 
-      if (m.id?.startsWith('o1-preview')) {
+      if (m.id?.startsWith('gpt-5')) {
+        maxCompletionTokens = 4096; // GPT-5: 4K output limit
+      } else if (m.id?.startsWith('o1-preview')) {
         maxCompletionTokens = 32000; // o1-preview: 32K output limit
       } else if (m.id?.startsWith('o1-mini')) {
         maxCompletionTokens = 65000; // o1-mini: 65K output limit

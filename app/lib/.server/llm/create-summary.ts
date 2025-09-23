@@ -4,6 +4,7 @@ import { DEFAULT_MODEL, DEFAULT_PROVIDER, PROVIDER_LIST } from '~/utils/constant
 import { extractCurrentContext, extractPropertiesFromMessage, simplifyBoltActions } from './utils';
 import { createScopedLogger } from '~/utils/logger';
 import { LLMManager } from '~/lib/modules/llm/manager';
+import { isReasoningModel } from './constants';
 
 const logger = createScopedLogger('create-summary');
 
@@ -99,6 +100,9 @@ ${summary.summary}`;
       ? (message.content.find((item) => item.type === 'text')?.text as string) || ''
       : message.content;
 
+  // Check if the model is a reasoning model
+  const isReasoning = isReasoningModel(currentModel);
+
   // select files from the list of code file from the project that might be useful for the current request from the user
   const resp = await generateText({
     system: `
@@ -185,6 +189,8 @@ Please provide a summary of the chat till now including the hitorical summary of
       apiKeys,
       providerSettings,
     }),
+    // Set temperature based on model type
+    temperature: isReasoning ? 1 : 0,
   });
 
   const response = resp.text;

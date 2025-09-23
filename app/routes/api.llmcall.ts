@@ -204,10 +204,12 @@ async function llmCallAction({ context, request }: ActionFunctionArgs) {
         toolChoice: 'none' as const,
       };
 
-      // For reasoning models, set temperature to 1 (required by OpenAI API)
-      const finalParams = isReasoning
-        ? { ...baseParams, temperature: 1 } // Set to 1 for reasoning models (only supported value)
-        : { ...baseParams, temperature: 0 };
+      // Set temperature based on model type
+      // Reasoning models require temperature=1, regular models use temperature=0
+      const finalParams = {
+        ...baseParams,
+        temperature: isReasoning ? 1 : 0,
+      };
 
       // DEBUG: Log final parameters
       logger.info(

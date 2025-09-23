@@ -238,23 +238,29 @@ export async function streamText(props: {
   const tokenParams = isReasoning ? { maxCompletionTokens: safeMaxTokens } : { maxTokens: safeMaxTokens };
 
   // Filter out unsupported parameters for reasoning models
-  const filteredOptions =
-    isReasoning && options
-      ? Object.fromEntries(
-          Object.entries(options).filter(
-            ([key]) =>
-              ![
-                'temperature',
-                'topP',
-                'presencePenalty',
-                'frequencyPenalty',
-                'logprobs',
-                'topLogprobs',
-                'logitBias',
-              ].includes(key),
-          ),
-        )
-      : options || {};
+  // Also always filter out temperature as we'll set it explicitly
+  const filteredOptions = options
+    ? Object.fromEntries(
+        Object.entries(options).filter(([key]) => {
+          // Always filter out temperature - we'll set it explicitly
+          if (key === 'temperature') return false;
+
+          // For reasoning models, also filter out other unsupported params
+          if (isReasoning) {
+            return ![
+              'topP',
+              'presencePenalty',
+              'frequencyPenalty',
+              'logprobs',
+              'topLogprobs',
+              'logitBias',
+            ].includes(key);
+          }
+
+          return true;
+        }),
+      )
+    : {};
 
   // DEBUG: Log filtered options
   logger.info(
@@ -285,8 +291,9 @@ export async function streamText(props: {
     messages: convertToCoreMessages(processedMessages as any),
     ...filteredOptions,
 
-    // Set temperature to 1 for reasoning models (required by OpenAI API)
-    ...(isReasoning ? { temperature: 1 } : {}),
+    // Set temperature based on model type
+    // Reasoning models require temperature=1, regular models use temperature=0
+    temperature: isReasoning ? 1 : 0,
   };
 
   // DEBUG: Log final streaming parameters
