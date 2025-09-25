@@ -237,24 +237,23 @@ export async function streamText(props: {
   // Use maxCompletionTokens for reasoning models (o1, GPT-5), maxTokens for traditional models
   const tokenParams = isReasoning ? { maxCompletionTokens: safeMaxTokens } : { maxTokens: safeMaxTokens };
 
-  // Filter out unsupported parameters for reasoning models
-  // Also always filter out temperature as we'll set it explicitly
+  /*
+   * Filter out unsupported parameters for reasoning models
+   * Also always filter out temperature as we'll set it explicitly
+   */
   const filteredOptions = options
     ? Object.fromEntries(
         Object.entries(options).filter(([key]) => {
           // Always filter out temperature - we'll set it explicitly
-          if (key === 'temperature') return false;
+          if (key === 'temperature') {
+            return false;
+          }
 
           // For reasoning models, also filter out other unsupported params
           if (isReasoning) {
-            return ![
-              'topP',
-              'presencePenalty',
-              'frequencyPenalty',
-              'logprobs',
-              'topLogprobs',
-              'logitBias',
-            ].includes(key);
+            return !['topP', 'presencePenalty', 'frequencyPenalty', 'logprobs', 'topLogprobs', 'logitBias'].includes(
+              key,
+            );
           }
 
           return true;
@@ -291,8 +290,10 @@ export async function streamText(props: {
     messages: convertToCoreMessages(processedMessages as any),
     ...filteredOptions,
 
-    // Set temperature based on model type
-    // Reasoning models require temperature=1, regular models use temperature=0
+    /*
+     * Set temperature based on model type
+     * Reasoning models require temperature=1, regular models use temperature=0
+     */
     temperature: isReasoning ? 1 : 0,
   };
 

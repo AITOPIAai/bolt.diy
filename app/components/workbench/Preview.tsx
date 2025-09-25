@@ -7,11 +7,13 @@ import { ScreenshotSelector } from './ScreenshotSelector';
 import { expoUrlAtom } from '~/lib/stores/qrCodeStore';
 import { ExpoQrModal } from '~/components/workbench/ExpoQrModal';
 import type { ElementInfo } from './Inspector';
+import { InlineModificationBox } from './InlineModificationBox';
 
 type ResizeSide = 'left' | 'right' | null;
 
 interface PreviewProps {
   setSelectedElement?: (element: ElementInfo | null) => void;
+  onSendMessage?: (message: string) => void;
 }
 
 interface WindowSize {
@@ -52,7 +54,7 @@ const WINDOW_SIZES: WindowSize[] = [
   { name: '4K Display', width: 3840, height: 2160, icon: 'i-ph:monitor', hasFrame: true, frameType: 'desktop' },
 ];
 
-export const Preview = memo(({ setSelectedElement }: PreviewProps) => {
+export const Preview = memo(({ setSelectedElement, onSendMessage }: PreviewProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,6 +71,8 @@ export const Preview = memo(({ setSelectedElement }: PreviewProps) => {
   const [isDeviceModeOn, setIsDeviceModeOn] = useState(false);
   const [widthPercent, setWidthPercent] = useState<number>(37.5);
   const [currentWidth, setCurrentWidth] = useState<number>(0);
+  const [selectedElementForModification, setSelectedElementForModification] = useState<ElementInfo | null>(null);
+  const [showModificationBox, setShowModificationBox] = useState(false);
 
   const resizingState = useRef({
     isResizing: false,
@@ -634,16 +638,27 @@ export const Preview = memo(({ setSelectedElement }: PreviewProps) => {
       } else if (event.data.type === 'INSPECTOR_CLICK') {
         const element = event.data.elementInfo;
 
-        navigator.clipboard.writeText(element.displayText).then(() => {
-          setSelectedElement?.(element);
-        });
+        // Adjust coordinates relative to iframe position
+        const iframeRect = iframeRef.current?.getBoundingClientRect();
+
+        if (iframeRect) {
+          element.rect.x += iframeRect.x;
+          element.rect.y += iframeRect.y;
+          element.rect.top += iframeRect.y;
+          element.rect.left += iframeRect.x;
+        }
+
+        // Show the inline modification box
+        setSelectedElementForModification(element);
+        setShowModificationBox(true);
+        setSelectedElement?.(element);
       }
     };
 
     window.addEventListener('message', handleMessage);
 
     return () => window.removeEventListener('message', handleMessage);
-  }, [isInspectorMode]);
+  }, [isInspectorMode, setSelectedElement]);
 
   const toggleInspectorMode = () => {
     const newInspectorMode = !isInspectorMode;
@@ -1044,6 +1059,22 @@ export const Preview = memo(({ setSelectedElement }: PreviewProps) => {
           )}
         </div>
       </div>
+
+      {/* Inline Modification Box */}
+      <InlineModificationBox
+        element={selectedElementForModification}
+        isVisible={showModificationBox}
+        onClose={() => {
+          setShowModificationBox(false);
+          setSelectedElementForModification(null);
+        }}
+        onSend={(message) => {
+          onSendMessage?.(message);
+          setShowModificationBox(false);
+          setSelectedElementForModification(null);
+          setSelectedElement?.(null);
+        }}
+      />
     </div>
   );
 });

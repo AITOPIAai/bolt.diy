@@ -204,8 +204,10 @@ async function llmCallAction({ context, request }: ActionFunctionArgs) {
         toolChoice: 'none' as const,
       };
 
-      // Set temperature based on model type
-      // Reasoning models require temperature=1, regular models use temperature=0
+      /*
+       * Set temperature based on model type
+       * Reasoning models require temperature=1, regular models use temperature=0
+       */
       const finalParams = {
         ...baseParams,
         temperature: isReasoning ? 1 : 0,

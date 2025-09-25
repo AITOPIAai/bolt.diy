@@ -38,6 +38,7 @@ interface WorkspaceProps {
   };
   updateChatMestaData?: (metadata: any) => void;
   setSelectedElement?: (element: ElementInfo | null) => void;
+  onSendMessage?: (message: string) => void;
 }
 
 const viewTransition = { ease: cubicEasingFn };
@@ -287,6 +288,7 @@ export const Workbench = memo(
     metadata: _metadata,
     updateChatMestaData: _updateChatMestaData,
     setSelectedElement,
+    onSendMessage,
   }: WorkspaceProps) => {
     renderLogger.trace('Workbench');
 
@@ -502,7 +504,7 @@ export const Workbench = memo(
                     <DiffView fileHistory={fileHistory} setFileHistory={setFileHistory} />
                   </View>
                   <View initial={{ x: '100%' }} animate={{ x: selectedView === 'preview' ? '0%' : '100%' }}>
-                    <Preview setSelectedElement={setSelectedElement} />
+                    <Preview setSelectedElement={setSelectedElement} onSendMessage={onSendMessage} />
                   </View>
                 </div>
               </div>

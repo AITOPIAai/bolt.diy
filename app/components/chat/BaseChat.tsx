@@ -491,7 +491,15 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
           </div>
           <ClientOnly>
             {() => (
-              <Workbench chatStarted={chatStarted} isStreaming={isStreaming} setSelectedElement={setSelectedElement} />
+              <Workbench
+                chatStarted={chatStarted}
+                isStreaming={isStreaming}
+                setSelectedElement={setSelectedElement}
+                onSendMessage={(message: string) => {
+                  // Send the message through the chat system
+                  sendMessage?.({} as any, message);
+                }}
+              />
             )}
           </ClientOnly>
         </div>

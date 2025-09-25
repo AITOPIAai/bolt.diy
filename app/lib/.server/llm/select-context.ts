@@ -174,6 +174,7 @@ export async function selectContext(props: {
       apiKeys,
       providerSettings,
     }),
+
     // Set temperature based on model type
     temperature: isReasoningModel(currentModel) ? 1 : 0,
   });

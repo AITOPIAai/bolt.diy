@@ -189,6 +189,7 @@ Please provide a summary of the chat till now including the hitorical summary of
       apiKeys,
       providerSettings,
     }),
+
     // Set temperature based on model type
     temperature: isReasoning ? 1 : 0,
   });
