@@ -67,6 +67,8 @@ export class ActionRunner {
   #webcontainer: Promise<WebContainer>;
   #currentExecutionPromise: Promise<void> = Promise.resolve();
   #shellTerminal: () => BoltShell;
+  #lastFileActionTime: number = 0;
+  #previewSwitchTimer: NodeJS.Timeout | null = null;
   runnerId = atom<string>(`${Date.now()}`);
   actions: ActionsMap = map({});
   onAlert?: (alert: ActionAlert) => void;
@@ -223,6 +225,36 @@ export class ActionRunner {
       this.#updateAction(actionId, {
         status: isStreaming ? 'running' : action.abortSignal.aborted ? 'aborted' : 'complete',
       });
+
+      // Automatically switch to preview after file changes are complete
+      if (action.type === 'file' && !isStreaming && !action.abortSignal.aborted) {
+        this.#lastFileActionTime = Date.now();
+
+        // Clear any existing timer
+        if (this.#previewSwitchTimer) {
+          clearTimeout(this.#previewSwitchTimer);
+        }
+
+        /*
+         * Set a new timer to switch to preview
+         * This creates a debounce effect - if multiple file actions come in quick succession,
+         * we'll only switch to preview after they're all done
+         */
+        this.#previewSwitchTimer = setTimeout(() => {
+          // Import workbench store dynamically to avoid circular dependencies
+          import('~/lib/stores/workbench').then(({ workbenchStore }) => {
+            // Only switch to preview if workbench is open and previews exist
+            const showWorkbench = workbenchStore.showWorkbench.get();
+            const hasPreview = workbenchStore.previews.get().length > 0;
+            const currentView = workbenchStore.currentView.get();
+
+            // Only switch if we're not already in preview mode
+            if (showWorkbench && hasPreview && currentView !== 'preview') {
+              workbenchStore.currentView.set('preview');
+            }
+          });
+        }, 500); // Wait 500ms after the last file action before switching
+      }
     } catch (error) {
       if (action.abortSignal.aborted) {
         return;
