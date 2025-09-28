@@ -2,6 +2,7 @@
   let isInspectorActive = false;
   let inspectorStyle = null;
   let currentHighlight = null;
+  let selectedElement = null; // Track the clicked element separately
 
   // Function to get relevant styles
   function getRelevantStyles(element) {
@@ -176,18 +177,20 @@
   // Event handlers
   function handleMouseMove(e) {
     if (!isInspectorActive) return;
-    
+
     const target = e.target;
     if (!target || target === document.body || target === document.documentElement) return;
 
-    // Remove previous highlight
-    if (currentHighlight) {
+    // Don't remove highlight from selected element
+    if (currentHighlight && currentHighlight !== selectedElement) {
       currentHighlight.classList.remove('inspector-highlight');
     }
-    
-    // Add highlight to current element
-    target.classList.add('inspector-highlight');
-    currentHighlight = target;
+
+    // Add highlight to current element (unless it's the selected one)
+    if (target !== selectedElement) {
+      target.classList.add('inspector-highlight');
+      currentHighlight = target;
+    }
 
     const elementInfo = createElementInfo(target);
     
@@ -200,15 +203,25 @@
 
   function handleClick(e) {
     if (!isInspectorActive) return;
-    
+
     e.preventDefault();
     e.stopPropagation();
-    
+
     const target = e.target;
     if (!target || target === document.body || target === document.documentElement) return;
 
+    // Remove highlight from previously selected element
+    if (selectedElement && selectedElement !== target) {
+      selectedElement.classList.remove('inspector-highlight');
+    }
+
+    // Keep the element highlighted after clicking
+    target.classList.add('inspector-highlight');
+    selectedElement = target; // Mark this as the selected element
+    currentHighlight = target;
+
     const elementInfo = createElementInfo(target);
-    
+
     // Send message to parent
     window.parent.postMessage({
       type: 'INSPECTOR_CLICK',
@@ -218,13 +231,13 @@
 
   function handleMouseLeave() {
     if (!isInspectorActive) return;
-    
-    // Remove highlight
-    if (currentHighlight) {
+
+    // Don't remove highlight from selected element
+    if (currentHighlight && currentHighlight !== selectedElement) {
       currentHighlight.classList.remove('inspector-highlight');
       currentHighlight = null;
     }
-    
+
     // Send message to parent
     window.parent.postMessage({
       type: 'INSPECTOR_LEAVE'
@@ -260,13 +273,17 @@
       document.addEventListener('mouseleave', handleMouseLeave, true);
     } else {
       document.body.classList.remove('inspector-active');
-      
-      // Remove highlight
+
+      // Remove highlights
       if (currentHighlight) {
         currentHighlight.classList.remove('inspector-highlight');
         currentHighlight = null;
       }
-      
+      if (selectedElement) {
+        selectedElement.classList.remove('inspector-highlight');
+        selectedElement = null;
+      }
+
       // Remove event listeners
       document.removeEventListener('mousemove', handleMouseMove, true);
       document.removeEventListener('click', handleClick, true);

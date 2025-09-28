@@ -96,23 +96,33 @@ export const InlineModificationBox = ({ element, isVisible, onClose, onSend }: I
 
   const position = getBoxPosition();
 
+  // Check if dark mode is active
+  const isDarkMode =
+    document.documentElement.classList.contains('dark') ||
+    document.documentElement.getAttribute('data-theme') === 'dark';
+
   return (
     <div
       ref={boxRef}
-      className={`fixed z-50 bg-bolt-elements-background-depth-3 rounded-lg shadow-2xl border border-bolt-elements-borderColor p-4 transition-all duration-200 ${
+      className={`fixed z-50 rounded-lg shadow-lg border p-4 transition-all duration-200 ${
         isAnimating ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
       }`}
       style={{
         left: `${position.left}px`,
         top: `${position.top}px`,
         width: '400px',
-        backdropFilter: 'blur(10px)',
-        backgroundColor: 'rgba(15, 15, 15, 0.95)',
+        backgroundColor: isDarkMode ? '#1F2937' : '#F9FAFB',
+        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#E5E7EB',
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
       }}
     >
       <div className="flex items-center gap-2 mb-3">
-        <div className="i-ph:cursor-click text-bolt-elements-item-contentAccent" />
-        <h3 className="text-sm font-medium text-bolt-elements-textPrimary">How would you like to modify it?</h3>
+        <div className="i-ph:cursor-click" style={{ color: '#7C3AED' }} />
+        <h3 className="text-sm font-medium" style={{ color: isDarkMode ? '#F3F4F6' : '#374151' }}>
+          How would you like to modify it?
+        </h3>
       </div>
 
       <div className="flex gap-2">
@@ -128,19 +138,41 @@ export const InlineModificationBox = ({ element, isVisible, onClose, onSend }: I
             }
           }}
           placeholder="Describe your modification..."
-          className="flex-1 px-3 py-2 text-sm bg-bolt-elements-background-depth-1 border border-bolt-elements-borderColor rounded-md outline-none focus:border-bolt-elements-item-contentAccent text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary transition-colors"
+          className="flex-1 px-3 py-2 text-sm rounded-md outline-none transition-colors"
+          style={{
+            backgroundColor: isDarkMode ? '#374151' : '#FFFFFF',
+            border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #E5E7EB',
+            color: isDarkMode ? '#F3F4F6' : '#111827',
+          }}
         />
         <button
           onClick={handleSend}
           disabled={!input.trim()}
-          className="px-4 py-2 text-sm font-medium text-white bg-bolt-elements-item-backgroundAccent rounded-md hover:bg-bolt-elements-item-backgroundAccentHover disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors flex items-center gap-2"
+          style={{
+            backgroundColor: input.trim() ? '#7C3AED' : '#9CA3AF',
+            cursor: input.trim() ? 'pointer' : 'not-allowed',
+            opacity: input.trim() ? 1 : 0.6,
+          }}
+          onMouseEnter={(e) => {
+            if (input.trim()) {
+              e.currentTarget.style.backgroundColor = '#6D28D9';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (input.trim()) {
+              e.currentTarget.style.backgroundColor = '#7C3AED';
+            }
+          }}
         >
           <span>Send</span>
           <div className="i-ph:arrow-right text-sm" />
         </button>
       </div>
 
-      <div className="mt-2 text-xs text-bolt-elements-textTertiary">Press Enter to send, Esc to cancel</div>
+      <div className="mt-2 text-xs" style={{ color: isDarkMode ? '#9CA3AF' : '#6B7280' }}>
+        Press Enter to send, Esc to cancel
+      </div>
     </div>
   );
 };

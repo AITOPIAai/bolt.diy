@@ -1066,13 +1066,21 @@ export const Preview = memo(({ setSelectedElement, onSendMessage }: PreviewProps
         isVisible={showModificationBox}
         onClose={() => {
           setShowModificationBox(false);
-          setSelectedElementForModification(null);
+
+          /*
+           * Keep the element selected even when closing the modification box
+           * setSelectedElementForModification(null);
+           */
         }}
         onSend={(message) => {
           onSendMessage?.(message);
           setShowModificationBox(false);
-          setSelectedElementForModification(null);
-          setSelectedElement?.(null);
+
+          /*
+           * Keep the element selected after sending the message
+           * setSelectedElementForModification(null);
+           * setSelectedElement?.(null);
+           */
         }}
       />
     </div>
