@@ -238,11 +238,15 @@ export default defineConfig({
       },
     }),
     presetIcons({
-      warn: true,
       collections: {
         ...customIconCollection,
       },
+      extraProperties: {
+        'display': 'inline-block',
+        'vertical-align': 'middle',
+      },
       unit: 'em',
+      cdn: 'https://esm.sh/',
     }),
   ],
 });

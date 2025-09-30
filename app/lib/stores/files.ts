@@ -65,6 +65,11 @@ export class FilesStore {
   #deletedPaths: Set<string> = import.meta.hot?.data.deletedPaths ?? new Set();
 
   /**
+   * MutationObserver for detecting chat ID changes
+   */
+  #chatIdObserver: MutationObserver | null = null;
+
+  /**
    * Map of files that matches the state of WebContainer.
    */
   files: MapStore<FileMap> = import.meta.hot?.data.files ?? map({});
@@ -108,7 +113,7 @@ export class FilesStore {
       let lastChatId = getCurrentChatId();
 
       // Use MutationObserver to detect URL changes (for SPA navigation)
-      const observer = new MutationObserver(() => {
+      this.#chatIdObserver = new MutationObserver(() => {
         const currentChatId = getCurrentChatId();
 
         if (currentChatId !== lastChatId) {
@@ -118,10 +123,22 @@ export class FilesStore {
         }
       });
 
-      observer.observe(document, { subtree: true, childList: true });
+      this.#chatIdObserver.observe(document, { subtree: true, childList: true });
     }
 
     this.#init();
+  }
+
+  /**
+   * Cleanup method to disconnect observers and prevent memory leaks
+   * Should be called when the store is no longer needed
+   */
+  cleanup() {
+    if (this.#chatIdObserver) {
+      logger.debug('Disconnecting chat ID observer');
+      this.#chatIdObserver.disconnect();
+      this.#chatIdObserver = null;
+    }
   }
 
   /**

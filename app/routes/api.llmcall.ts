@@ -9,6 +9,8 @@ import type { ModelInfo } from '~/lib/modules/llm/types';
 import { getApiKeysFromCookie, getProviderSettingsFromCookie } from '~/lib/api/cookies';
 import { createScopedLogger } from '~/utils/logger';
 
+const logger = createScopedLogger('llmcall');
+
 export async function action(args: ActionFunctionArgs) {
   return llmCallAction(args);
 }
@@ -21,8 +23,6 @@ async function getModelList(options: {
   const llmManager = LLMManager.getInstance(import.meta.env);
   return llmManager.updateModelList(options);
 }
-
-const logger = createScopedLogger('api.llmcall');
 
 function getCompletionTokenLimit(modelDetails: ModelInfo): number {
   // 1. If model specifies completion tokens, use that
@@ -118,7 +118,7 @@ async function llmCallAction({ context, request }: ActionFunctionArgs) {
         },
       });
     } catch (error: unknown) {
-      console.log(error);
+      logger.error('LLM call failed:', error);
 
       if (error instanceof Error && error.message?.includes('API key')) {
         throw new Response('Invalid or missing API key', {
@@ -243,7 +243,7 @@ async function llmCallAction({ context, request }: ActionFunctionArgs) {
         },
       });
     } catch (error: unknown) {
-      console.log(error);
+      logger.error('LLM call failed:', error);
 
       const errorResponse = {
         error: true,

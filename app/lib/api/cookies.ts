@@ -24,10 +24,48 @@ export function parseCookies(cookieHeader: string | null) {
 
 export function getApiKeysFromCookie(cookieHeader: string | null): Record<string, string> {
   const cookies = parseCookies(cookieHeader);
-  return cookies.apiKeys ? JSON.parse(cookies.apiKeys) : {};
+
+  if (!cookies.apiKeys) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(cookies.apiKeys);
+
+    // Validate that the parsed value is an object
+    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+      return parsed;
+    }
+
+    console.error('Invalid API keys format in cookie - expected object, got:', typeof parsed);
+
+    return {};
+  } catch (error) {
+    console.error('Failed to parse API keys from cookie:', error);
+    return {};
+  }
 }
 
 export function getProviderSettingsFromCookie(cookieHeader: string | null): Record<string, any> {
   const cookies = parseCookies(cookieHeader);
-  return cookies.providers ? JSON.parse(cookies.providers) : {};
+
+  if (!cookies.providers) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(cookies.providers);
+
+    // Validate that the parsed value is an object
+    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+      return parsed;
+    }
+
+    console.error('Invalid provider settings format in cookie - expected object, got:', typeof parsed);
+
+    return {};
+  } catch (error) {
+    console.error('Failed to parse provider settings from cookie:', error);
+    return {};
+  }
 }

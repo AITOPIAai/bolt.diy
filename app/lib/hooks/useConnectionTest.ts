@@ -34,7 +34,10 @@ export function useConnectionTest({ testEndpoint, serviceName, getUserIdentifier
           timestamp: Date.now(),
         });
       } else {
-        const errorData = (await response.json().catch(() => ({}))) as { error?: string };
+        const errorData = (await response.json().catch((err) => {
+          console.error('Failed to parse error response:', err);
+          return {};
+        })) as { error?: string };
         setTestResult({
           status: 'error',
           message: `Connection failed: ${errorData.error || `${response.status} ${response.statusText}`}`,

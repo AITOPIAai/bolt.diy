@@ -85,7 +85,10 @@ export default function SupabaseTab() {
           timestamp: Date.now(),
         });
       } else {
-        const errorData = (await response.json().catch(() => ({}))) as { error?: string };
+        const errorData = (await response.json().catch((err) => {
+          console.error('Failed to parse Supabase error response:', err);
+          return {};
+        })) as { error?: string };
         setConnectionTest({
           status: 'error',
           message: `Connection failed: ${errorData.error || `${response.status} ${response.statusText}`}`,
@@ -195,12 +198,10 @@ export default function SupabaseTab() {
         // First try to initialize using server-side token
         await initializeSupabaseConnection();
 
-        // If no connection was established, the user will need to manually enter a token
-        const currentState = supabaseConnection.get();
-
-        if (!currentState.user) {
-          console.log('No server-side Supabase token available, manual connection required');
-        }
+        /*
+         * If no connection was established, the user will need to manually enter a token
+         * No logging needed - this is expected behavior when no env token is configured
+         */
       } catch (error) {
         console.error('Failed to initialize Supabase connection:', error);
       }
